@@ -362,11 +362,6 @@ async def inline_qr_handler(inline_query: types.InlineQuery):
                 )
             os.remove(path)
             result_id = hashlib.md5(qr_text.encode()).hexdigest()
-            button = InlineKeyboardButton(
-                text=f"QR Code for: {qr_text[:20]}...",
-                callback_data=f"qr_code_data:{qr_text[:100]}"
-            )
-            markup = InlineKeyboardMarkup().add(button)
             await bot.answer_inline_query(
                 inline_query.id,
                 results=[
@@ -375,7 +370,6 @@ async def inline_qr_handler(inline_query: types.InlineQuery):
                         photo_url=file_id,
                         thumb_url=f"https://api.telegram.org/file/bot{TOKEN}/{file_id}",
                         caption=f"QR code for: {qr_text[:50]}...",
-                        reply_markup=markup
                     )
                 ],
                 cache_time=60
@@ -397,7 +391,22 @@ async def inline_qr_handler(inline_query: types.InlineQuery):
 
 
 
+#---BOT START---
+async def set_default_commands(dp):
+    await dp.bot.set_my_commands([
+        types.BotCommand("start", "Start the bot"),
+        types.BotCommand("help", "Show help message"),
+        types.BotCommand("generate", "Generate QR code"),
+        types.BotCommand("scan", "Scan QR from photo"),
+        types.BotCommand("wifiqr", "Create Wi-Fi QR code"),
+        types.BotCommand("admin", "Admin panel"),
+    ])
+
+async def on_startup(dp):
+    logging.info("Starting bot...")
+    await set_default_commands(dp)
+
 
 if __name__ == "__main__":
-    logging.info("Starting bot...")
-    executor.start_polling(dp, skip_updates=True)
+    from aiogram import executor
+    executor.start_polling(dp, on_startup=on_startup, skip_updates=True)

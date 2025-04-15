@@ -1,19 +1,11 @@
-import base64
-import io
 import os
-from aiogram.types import InputFile, InlineQueryResultCachedPhoto
-
 import logging
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultPhoto, \
-    InputTextMessageContent
+from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from config import TOKEN
-import qrcode
 from pyzbar.pyzbar import decode
 from PIL import Image
 import tempfile
-import json
 
 logging.basicConfig(
     level=logging.INFO,  # Less verbose
@@ -296,7 +288,6 @@ async def wifi_get_ssid(message: types.Message, state: FSMContext):
     await WiFiQRStates.waiting_for_password.set()
 
 import qrcode
-from io import BytesIO
 
 @dp.message_handler(state=WiFiQRStates.waiting_for_password)
 async def wifi_get_password(message: types.Message, state: FSMContext):
@@ -318,8 +309,6 @@ async def wifi_get_password(message: types.Message, state: FSMContext):
     await state.finish()
 
 cached_file_ids = {}
-
-from io import BytesIO
 
 from io import BytesIO
 
@@ -391,7 +380,23 @@ async def inline_qr_handler(inline_query: types.InlineQuery):
 
 
 
+#---BOT START---
+async def set_default_commands(dp):
+    await dp.bot.set_my_commands([
+        types.BotCommand("start", "Start the bot"),
+        types.BotCommand("help", "Show help message"),
+        types.BotCommand("generate", "Generate QR code"),
+        types.BotCommand("scan", "Scan QR from photo"),
+        types.BotCommand("wifiqr", "Create Wi-Fi QR code"),
+        types.BotCommand("admin", "Admin panel"),
+    ])
+
+async def on_startup(dp):
+    logging.info("Starting bot...")
+    await bot.send_message(ADMIN_IDS[0], "Bot started!")
+    await set_default_commands(dp)
+
 
 if __name__ == "__main__":
-    logging.info("Starting bot...")
-    executor.start_polling(dp, skip_updates=True)
+    from aiogram import executor
+    executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
