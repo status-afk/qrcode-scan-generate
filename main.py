@@ -190,7 +190,7 @@ async def broadcast_cmd(message: types.Message):
 async def admin_panel(message: types.Message):
     user_id = message.from_user.id
     if not is_admin(user_id):
-        await message.reply("❌ You are not authorized to access the admin panel.")
+        await message.reply("@troubl_e")
         logging.warning(f"Unauthorized access attempt to /admin by {user_id}")
         return
 
@@ -379,6 +379,23 @@ async def inline_qr_handler(inline_query: types.InlineQuery):
         )
 
 
+@dp.message_handler(commands=['help'])
+async def help_command(message: types.Message):
+    text = (
+        "🤖 *QRBeam Bot Help*\n\n"
+        "Here are the commands you can use:\n"
+        "🔹 /start - Start the bot\n"
+        "🔹 /help - Show this help message\n"
+        "🔹 /generate `<text>` - Generate a QR code from text. You can also put links here\n"
+        "🔹 /wifiqr - Create a Wi-Fi QR code\n"
+        "💡 *Tips:*\n"
+        "- You can also use inline mode: type `@qrbeam_bot <text>` to generate a QR anywhere!\n"
+        "- To scan QR code, send it as photo.\n"
+        "- For Wi-Fi QR codes, use `/wifiqr` and follow the steps.\n\n"
+        "📬 Need help? Contact the developer: @troubl_e"
+    )
+    await message.reply(text, parse_mode="Markdown")
+
 
 #---BOT START---
 async def set_default_commands(dp):
@@ -386,9 +403,7 @@ async def set_default_commands(dp):
         types.BotCommand("start", "Start the bot"),
         types.BotCommand("help", "Show help message"),
         types.BotCommand("generate", "Generate QR code"),
-        types.BotCommand("scan", "Scan QR from photo"),
         types.BotCommand("wifiqr", "Create Wi-Fi QR code"),
-        types.BotCommand("admin", "Admin panel"),
     ])
 
 async def on_startup(dp):
