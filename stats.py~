@@ -89,6 +89,12 @@ def make_premium(user_id: int):
                 if user["id"] == user_id:
                     user["is_premium"] = True
                     break
+            else:
+                data["users"].append({
+                    "id": user_id,
+                    "username": "",
+                    "is_premium": True
+                })
             f.seek(0)
             json.dump(data, f, indent=2)
             f.truncate()

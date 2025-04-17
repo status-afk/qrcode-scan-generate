@@ -16,7 +16,7 @@ bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
-
+CLICK_CARD_NUMBER = '8800 9082 4733 6512'
 ADMIN_IDS = [7376396301]
 def is_admin(user_id):
     return user_id in ADMIN_IDS
@@ -32,6 +32,13 @@ class SendToUserFSM(StatesGroup):
 class WiFiQRStates(StatesGroup):
     waiting_for_ssid = State()
     waiting_for_password = State()
+
+class WiFiQRStatesForInline(StatesGroup):
+    waiting_for_ssid = State()
+    waiting_for_password = State()
+
+class QRCodeState(StatesGroup):
+    waiting_for_text = State()  # State for waiting for text to generate QR
 #---End STATES---
 
 #---PARSERS---
@@ -46,6 +53,19 @@ def parse_wifi_qr(data: str):
 
 #---End PARSERS---
 
+#---INLINE KEYBOARDS---
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+start_keyboard = InlineKeyboardMarkup(row_width=2)
+start_keyboard.add(
+    InlineKeyboardButton(text="🧪 Generate QR", callback_data="generate_qr"),
+    InlineKeyboardButton(text="🛜 Generate QR for WiFi", callback_data="wifi_qr"),
+    InlineKeyboardButton(text="ℹ️ About", callback_data="about_bot"),
+    # InlineKeyboardButton(text="ℹ️ Support Bot", callback_data="donate"),
+
+)
+
+#---End INLINE KEYBOARDS---
 
 from stats import add_user, get_user_by_id, get_user_count, get_users
 
@@ -72,6 +92,8 @@ async def start_cmd(message: types.Message):
         "Hey! 👋\n"
         "Send /generate <text> to get a QR code.\n"
         "Or send me a photo of a QR code to scan it!"
+        "👇 Or use the menu below:",
+        reply_markup=start_keyboard
     )
 
 @dp.message_handler(commands=['generate'])
@@ -123,7 +145,7 @@ async def scan_qr(message: types.Message):
                     parse_mode="Markdown"
                 )
             else:
-                await message.reply(f"📷 Scanned QR content:\n`{qr_data}`", parse_mode="Markdown")
+                await message.reply(f"📷 Scanned QR content:\n`{qr_data}`",parse_mode="Markdown")
         else:
             await message.reply("⚠️ No QR code detected in the image.")
     except Exception as e:
@@ -396,6 +418,96 @@ async def help_command(message: types.Message):
     )
     await message.reply(text, parse_mode="Markdown")
 
+@dp.callback_query_handler(lambda c: c.data == "wifi_qr")
+async def wifi_qr_callback(call: types.CallbackQuery):
+    await call.message.answer("📶 Enter your Wi-Fi SSID (network name):")
+    await WiFiQRStatesForInline.waiting_for_ssid.set()
+    await call.answer()
+
+@dp.message_handler(state=WiFiQRStatesForInline.waiting_for_ssid)
+async def process_ssid(message: types.Message, state: FSMContext):
+    await state.update_data(ssid=message.text)
+    await message.answer("🔒 Enter your Wi-Fi password:")
+    await WiFiQRStatesForInline.waiting_for_password.set()
+
+@dp.message_handler(state=WiFiQRStatesForInline.waiting_for_password)
+async def process_password(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    ssid = user_data["ssid"]
+    password = message.text
+    encryption = "WEP"  # Default encryption
+
+    qr_text = f"WIFI:T:{encryption};S:{ssid};P:{password};;"
+
+    # generate QR image
+    import qrcode
+    from io import BytesIO
+
+    qr = qrcode.make(qr_text)
+    img = BytesIO()
+    img.name = "wifi_qr.png"
+    qr.save(img, "PNG")
+    img.seek(0)
+
+    await message.answer_photo(photo=img, caption="📲 Scan this QR to connect to Wi-Fi!")
+    await state.finish()
+
+
+@dp.callback_query_handler(lambda c: c.data == 'generate_qr')
+async def generate_qr(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)  # Answer the callback immediately
+
+    # Ask the user to provide text to generate the QR code
+    await bot.send_message(callback_query.from_user.id, "📝 Send the text you'd like to convert into a QR code:")
+
+    # Set state to wait for the text input
+    await QRCodeState.waiting_for_text.set()
+
+@dp.message_handler(state=QRCodeState.waiting_for_text)
+async def process_qr_text(message: types.Message, state: FSMContext):
+    text = message.text
+
+    # Generate the QR code
+    import qrcode
+    from io import BytesIO
+
+    qr = qrcode.make(text)
+    img = BytesIO()
+    img.name = "qr_code.png"
+    qr.save(img, "PNG")
+    img.seek(0)
+
+    # Send the QR code back to the user
+    await message.answer_photo(photo=img, caption="📲 Here's your QR code!")
+    await state.finish()
+@dp.callback_query_handler(lambda c: c.data == "about_bot")
+async def on_about(callback_query: types.CallbackQuery):
+    # Send a message about the bot
+    await callback_query.message.answer(
+        "This is a bot that can generate and scan QR codes for various purposes like Wi-Fi connections, text, and more!\n\n"
+        "Created by: @troubl_e\n"
+        "Enjoy using the bot!"
+    )
+
+    # Optionally, you can also acknowledge the callback query
+    await callback_query.answer()
+
+# @dp.callback_query_handler(lambda c: c.data == 'donate')
+# async def process_donate_button(callback_query: types.CallbackQuery):
+#     text = (
+#         "NOTE: You can donate with Click.uz virtual card only.\n"
+#         "🙏 Thank you for choosing to support this bot!\n\n"
+#         "To donate, use the Click.uz inline mode in any chat:\n\n"
+#         f"🔹 `@clickuz {CLICK_CARD_NUMBER} <amount>`\n\n"
+#         "📌 Replace `<amount>` with how much you want to donate.\n"
+#         f"Example: `@clickuz {CLICK_CARD_NUMBER} 10000`\n"
+#         "✅ Works only in Telegram chats (inline mode)."
+#     )
+#     await bot.send_message(
+#         callback_query.from_user.id,
+#         text,
+#         parse_mode="Markdown"
+#     )
 
 #---BOT START---
 async def set_default_commands(dp):
@@ -410,7 +522,6 @@ async def on_startup(dp):
     logging.info("Starting bot...")
     await bot.send_message(ADMIN_IDS[0], "Bot started!")
     await set_default_commands(dp)
-
 
 if __name__ == "__main__":
     from aiogram import executor
