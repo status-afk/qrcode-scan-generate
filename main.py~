@@ -527,7 +527,6 @@ async def set_default_commands(dp):
         types.BotCommand("help", "Show help message"),
         types.BotCommand("generate", "Generate QR code"),
         types.BotCommand("wifiqr", "Create Wi-Fi QR code"),
-        types.BotCommand("cancel", "Cancel current operation"),
     ])
 
 async def on_startup(dp):
