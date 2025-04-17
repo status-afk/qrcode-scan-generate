@@ -31,8 +31,7 @@ def add_user(user_id, username=None):
     if not any(user["id"] == user_id for user in stats["users"]):
         stats["users"].append({
             "id": user_id,
-            "username": username or "",
-            "is_premium":False
+            "username": username or ""
         })
         save_stats(stats)
 
@@ -69,28 +68,3 @@ def get_users():
             return []
     logging.warning(f"{STATS_FILE} not found")
     return []
-
-def is_premium(user_id: int) -> bool:
-    try:
-        with open("user_stats.json", "r") as f:
-            data = json.load(f)
-        for user in data["users"]:
-            if user["id"] == user_id:
-                return user.get("is_premium", False)
-    except Exception as e:
-        print("Error:", e)
-    return False
-
-def make_premium(user_id: int):
-    try:
-        with open("user_stats.json", "r+") as f:
-            data = json.load(f)
-            for user in data["users"]:
-                if user["id"] == user_id:
-                    user["is_premium"] = True
-                    break
-            f.seek(0)
-            json.dump(data, f, indent=2)
-            f.truncate()
-    except Exception as e:
-        print("Error:", e)

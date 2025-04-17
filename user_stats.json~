@@ -3,11 +3,12 @@
     {
       "id": 7126357860,
       "username": "azam_vosejonov",
-      is_
+      "is_premium": true
     },
     {
       "id": 7376396301,
-      "username": "troubl_e"
+      "username": "troubl_e",
+      "is_premium": true
     }
   ]
 }
