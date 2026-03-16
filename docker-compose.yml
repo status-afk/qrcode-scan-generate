@@ -5,10 +5,10 @@ services:
       dockerfile: Dockerfile
     container_name: qrcodescan_bot
     environment:
-      - BOT_TOKEN=7808674035:AAGUmYxc__b5hUxy4hA6cM_K01UI9RvHIpA
+      - BOT_TOKEN=${BOT_TOKEN}
     volumes:
-      - ./data:/app/data  # Ma'lumotlarni saqlash uchun jild
-    restart: unless-stopped  # Konteyner o'chganda avto-qayta ishga tushadi
+      - ./data:/app/data
+    restart: unless-stopped
 
 volumes:
   data:  # Ma'lumotlarni saqlash uchun nomlangan jild
