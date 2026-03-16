@@ -1,8 +1,8 @@
 import os
+from dotenv import load_dotenv
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from config import TOKEN
 from pyzbar.pyzbar import decode
 from PIL import Image
 import tempfile
@@ -11,7 +11,8 @@ logging.basicConfig(
     level=logging.INFO,  # Less verbose
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-
+load_dotenv()
+TOKEN=os.getenv("BOT_TOKEN")
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
