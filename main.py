@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 import logging
+import asyncio
+asyncio.set_event_loop(asyncio.new_event_loop())
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from pyzbar.pyzbar import decode
