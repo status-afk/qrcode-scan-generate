@@ -39,9 +39,9 @@ A Telegram bot for generating and scanning QR codes — including Wi-Fi QR codes
    ```bash
    pip install aiogram qrcode pyzbar Pillow
    ```
-3. Create a `config.py` file:
+3. Create a `.env` file:
    ```python
-   TOKEN = "your_bot_token_here"
+   BOT_TOKEN = "your_bot_token_here"
    ```
 4. Run the bot:
    ```bash
